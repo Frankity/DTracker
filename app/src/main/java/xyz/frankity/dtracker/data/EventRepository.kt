@@ -89,7 +89,7 @@ class EventRepository(private val sharedPreferences: SharedPreferences) {
             DestinyEvent("ma_sca_2", "Defend Warsat", "A downed Warsat is transmitting valuable intel. Defend it from Cabal assaults until the upload completes.", "Mars", "Scablands", today + (29 * m), 60),        )
     
             // TOWER & SPECIAL (With specific delays)
-            DestinyEvent("t_shop", "Inventory Update", "Find it in the tower", "Shop Keepers", today + (1 * m), 180, 0),
+            DestinyEvent("t_shop", "Inventory Update", "Find it in the tower", "Tower", "Shop Keepers", today + (1 * m), 180, 0),
             DestinyEvent("t_speaker", "Inventory Update", "Find it in the tower", "Tower", "The Speaker", 1413662516193L, 5037, 0),
             DestinyEvent("t_bounty","Inventory Update", "Find it in the tower", "Tower", "Bounty Tracker", today + (2 * m), 1440, 0),
             DestinyEvent("t_weekly", "Weekly Rollover", "Find it in the tower", "Tower", "Events", 1413277200000L, 10080, 0)
