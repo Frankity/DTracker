@@ -86,14 +86,14 @@ class EventRepository(private val sharedPreferences: SharedPreferences) {
             DestinyEvent("ma_bur", "Eliminate The Target", "A powerful Cabal commander is leading operations in the ruins. Eliminate the target to weaken their control.", "Mars", "Buried City", today + (21 * m), 60),
             DestinyEvent("ma_hol", "Eliminate The Target", "A high-ranking enemy has appeared in the Hollows. Neutralize the threat before it consolidates power.", "Mars", "The Hollows", today + (52 * m), 60),
             DestinyEvent("ma_sca_1", "Eliminate The Target", "A dangerous Cabal officer has mobilized troops in the Scablands. Hunt down and eliminate this leader.", "Mars", "Scablands", today + (49 * m), 60),
-            DestinyEvent("ma_sca_2", "Defend Warsat", "A downed Warsat is transmitting valuable intel. Defend it from Cabal assaults until the upload completes.", "Mars", "Scablands", today + (29 * m), 60),        )
+            DestinyEvent("ma_sca_2", "Defend Warsat", "A downed Warsat is transmitting valuable intel. Defend it from Cabal assaults until the upload completes.", "Mars", "Scablands", today + (29 * m), 60),       
     
             // TOWER & SPECIAL (With specific delays)
             DestinyEvent("t_shop", "Inventory Update", "Find it in the tower", "Tower", "Shop Keepers", today + (1 * m), 180, 0),
             DestinyEvent("t_speaker", "Inventory Update", "Find it in the tower", "Tower", "The Speaker", 1413662516193L, 5037, 0),
             DestinyEvent("t_bounty","Inventory Update", "Find it in the tower", "Tower", "Bounty Tracker", today + (2 * m), 1440, 0),
-            DestinyEvent("t_weekly", "Weekly Rollover", "Find it in the tower", "Tower", "Events", 1413277200000L, 10080, 0)
-                                                                        )
+            DestinyEvent("t_weekly", "Weekly Rollover", "Find it in the tower", "Tower", "Events", 1413277200000L, 10080, 0))
+                                                                        
     
     }
 }
