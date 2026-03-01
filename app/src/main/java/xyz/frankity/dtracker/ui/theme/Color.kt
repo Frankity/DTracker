@@ -51,3 +51,14 @@ val DarkSurface = Color(0xFF1A1C1E)
 val DarkOnSurface = Color(0xFFE2E2E6)
 val DarkSurfaceVariant = Color(0xFF42474E)
 val DarkOnSurfaceVariant = Color(0xFFC2C7CF)
+
+fun getPlanetColor(planet: String): Color {
+    return when (planet.lowercase()) {
+        "earth" -> Color(0xFF81C784)
+        "moon" -> Color(0xFFB0BEC5)
+        "venus" -> Color(0xFF4DB6AC)
+        "mars" -> Color(0xFFFF8A65)
+        "tower" -> Color(0xFF9575CD)
+        else -> Color(0xFF64B5F6)
+    }
+}
