@@ -15,20 +15,13 @@ DTracker is an Android application designed to help Destiny 1 players track publ
 
 Here are some screenshots showcasing the application's interface:
 
-### Main Event List
+## Screenshots
 
-![Main Event List](assets/Screenshot_1772399967.png)
-_Displays a list of public events, filterable by planet, with real-time countdowns._
-
-### Event Details Dialog
-
-![Event Details Dialog](assets/Screenshot_1772399970.png)
-_Shows detailed information about a specific public event upon tapping its card._
-
-### Notification Settings
-
-![Notification Settings](assets/Screenshot_1772396596.png)
-_Allows users to enable or disable notifications for public events on each planet._
+| View | Screenshot |
+|---|---|
+| **Main Event List** <br/> _Displays a list of public events, filterable by planet, with real-time countdowns._ | ![Main Event List](assets/Screenshot_1772399967.png){width=300px} |
+| **Event Details Dialog** <br/> _Shows detailed information about a specific public event upon tapping its card._ | ![Event Details Dialog](assets/Screenshot_1772399970.png){width=300px} |
+| **Notification Settings** <br/> _Allows users to enable or disable notifications for public events on each planet._ | ![Notification Settings](assets/Screenshot_1772396596.png){width=300px} |
 
 ## How to Run
 
