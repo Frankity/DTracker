@@ -8,7 +8,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import xyz.frankity.dtracker.MainActivity
 import xyz.frankity.dtracker.data.EventRepository
@@ -16,6 +15,7 @@ import xyz.frankity.dtracker.models.DestinyEvent
 
 class NotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        val eventId = intent.getStringExtra("event_id") ?: ""
         val eventName = intent.getStringExtra("event_name") ?: "Public Event"
         val planet = intent.getStringExtra("planet") ?: "Unknown"
         val location = intent.getStringExtra("location") ?: ""
@@ -34,9 +34,14 @@ class NotificationReceiver : BroadcastReceiver() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        val activityIntent = Intent(context, MainActivity::class.java)
+        // Pass event_id to MainActivity
+        val activityIntent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("OPEN_EVENT_ID", eventId)
+        }
+        
         val pendingIntent = PendingIntent.getActivity(
-            context, 0, activityIntent,
+            context, eventId.hashCode(), activityIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
@@ -81,6 +86,7 @@ object NotificationHelper {
 
         nextNotification?.let { (event, alarmTime) ->
             val intent = Intent(context, NotificationReceiver::class.java).apply {
+                putExtra("event_id", event.id)
                 putExtra("event_name", event.name)
                 putExtra("planet", event.planet)
                 putExtra("location", event.location)
@@ -98,7 +104,6 @@ object NotificationHelper {
                     if (alarmManager.canScheduleExactAlarms()) {
                         alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, alarmTime, pendingIntent)
                     } else {
-                        // Si no tiene permiso para alarmas exactas, usamos una normal
                         alarmManager.set(AlarmManager.RTC_WAKEUP, alarmTime, pendingIntent)
                     }
                 } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -107,7 +112,6 @@ object NotificationHelper {
                     alarmManager.setExact(AlarmManager.RTC_WAKEUP, alarmTime, pendingIntent)
                 }
             } catch (e: SecurityException) {
-                // Fallback por si falla a pesar de las comprobaciones
                 alarmManager.set(AlarmManager.RTC_WAKEUP, alarmTime, pendingIntent)
             }
         }

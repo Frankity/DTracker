@@ -2,6 +2,7 @@ package xyz.frankity.dtracker
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -25,6 +26,8 @@ import xyz.frankity.dtracker.utils.calculateServerTime
 
 class MainActivity : ComponentActivity() {
 
+    private var initialEventIdFromNotification by mutableStateOf<String?>(null)
+
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -40,6 +43,8 @@ class MainActivity : ComponentActivity() {
 
         checkNotificationPermission()
         NotificationHelper.scheduleNextNotification(this)
+        
+        handleIntent(intent)
 
         enableEdgeToEdge()
         setContent {
@@ -61,6 +66,7 @@ class MainActivity : ComponentActivity() {
                     MainScreen(
                         events = events,
                         serverTime = serverTime,
+                        initialEventId = initialEventIdFromNotification,
                         onUpdateEvent = { id, isHit ->
                             val newList = events.map {
                                 if (it.id == id) {
@@ -73,6 +79,13 @@ class MainActivity : ComponentActivity() {
                         },
                         onNavigateToSettings = { currentScreen = "settings" }
                     )
+                    // Reset initialEventId after passing it to MainScreen
+                    LaunchedEffect(initialEventIdFromNotification) {
+                        if (initialEventIdFromNotification != null) {
+                            delay(500) // Small delay to ensure dialog is triggered
+                            initialEventIdFromNotification = null
+                        }
+                    }
                 } else {
                     val allPlanets = remember(events) {
                         events.map { it.planet }.distinct().sortedBy { it }
@@ -94,6 +107,18 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        val eventId = intent?.getStringExtra("OPEN_EVENT_ID")
+        if (eventId != null) {
+            initialEventIdFromNotification = eventId
         }
     }
 

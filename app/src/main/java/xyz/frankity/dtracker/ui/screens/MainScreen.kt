@@ -23,6 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,10 +32,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import xyz.frankity.dtracker.models.DestinyEvent
+import xyz.frankity.dtracker.ui.composables.EventDetailDialog
 import xyz.frankity.dtracker.ui.composables.EventItem
 import xyz.frankity.dtracker.ui.theme.MontserratFontFamily
 import xyz.frankity.dtracker.ui.theme.getPlanetColor
 import xyz.frankity.dtracker.utils.calculateNextOccurrence
+import xyz.frankity.dtracker.utils.calculateNextOccurrenceProxy
 import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,9 +45,26 @@ import java.util.Date
 fun MainScreen(
     events: List<DestinyEvent>,
     serverTime: Long,
+    initialEventId: String? = null,
     onUpdateEvent: (String, Boolean) -> Unit,
     onNavigateToSettings: () -> Unit
 ) {
+    var eventToShowDetails by remember { mutableStateOf<DestinyEvent?>(null) }
+
+    LaunchedEffect(initialEventId, events) {
+        if (initialEventId != null) {
+            eventToShowDetails = events.find { it.id == initialEventId }
+        }
+    }
+
+    if (eventToShowDetails != null) {
+        EventDetailDialog(
+            event = eventToShowDetails!!,
+            nextOccurrence = calculateNextOccurrenceProxy(eventToShowDetails!!, serverTime),
+            onDismiss = { eventToShowDetails = null }
+        )
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(

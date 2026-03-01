@@ -3,6 +3,7 @@ package xyz.frankity.dtracker.models
 data class DestinyEvent(
     val id: String,
     val name: String,
+    val description: String,
     val planet: String,
     val location: String,
     val initialStartMillis: Long,
