@@ -19,9 +19,9 @@ Here are some screenshots showcasing the application's interface:
 
 | View | Screenshot |
 |---|---|
-| **Main Event List** <br/> _Displays a list of public events, filterable by planet, with real-time countdowns._ | <img src="assets/Screenshot_1772399967.png" width="250"> |
-| **Event Details Dialog** <br/> _Shows detailed information about a specific public event upon tapping its card._ | <img src="assets/Screenshot_1772399970.png" width="250"> |
-| **Notification Settings** <br/> _Allows users to enable or disable notifications for public events on each planet._ | <img src="assets/Screenshot_1772396596.png" width="250"> |
+| **Main Event List** <br/> _Displays a list of public events, filterable by planet, with real-time countdowns._ | <img src="assets/Screenshot_1772396596.png" width="250"> |
+| **Event Details Dialog** <br/> _Shows detailed information about a specific public event upon tapping its card._ | <img src="assets/Screenshot_1772399967.png" width="250"> |
+| **Notification Settings** <br/> _Allows users to enable or disable notifications for public events on each planet._ | <img src="assets/Screenshot_1772399970.png" width="250"> |
 
 ## How to Run
 
