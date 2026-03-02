@@ -18,11 +18,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import xyz.frankity.dtracker.ui.theme.MontserratFontFamily
@@ -41,6 +44,7 @@ fun NotificationSettingsScreen(
     BackHandler(onBack = onBack)
 
     Scaffold(
+        containerColor = Color.Transparent,
         topBar = {
             TopAppBar(
                 title = {
@@ -54,7 +58,12 @@ fun NotificationSettingsScreen(
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Black.copy(alpha = 0.5f),
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
+                )
             )
         }
     ) { innerPadding ->
@@ -68,14 +77,15 @@ fun NotificationSettingsScreen(
                 text = "Server Time Zone Offset (UTC)",
                 modifier = Modifier.padding(16.dp),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = Color.White
             )
             
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 Text(
                     text = "Current Offset: ${if (timeZoneOffset >= 0) "+" else ""}$timeZoneOffset hours",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary
+                    color = Color.White.copy(alpha = 0.8f)
                 )
                 Slider(
                     value = timeZoneOffset.toFloat(),
@@ -86,18 +96,19 @@ fun NotificationSettingsScreen(
                 Text(
                     text = "Changing this will reset event data to synchronize with the new time zone.",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.secondary
+                    color = Color.White.copy(alpha = 0.6f)
                 )
             }
 
-            Divider(modifier = Modifier.padding(vertical = 16.dp))
+            Divider(modifier = Modifier.padding(vertical = 16.dp), color = Color.White.copy(alpha = 0.2f))
 
             // Planets Section
             Text(
                 text = "Enable Notifications by Planet",
                 modifier = Modifier.padding(16.dp),
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = Color.White
             )
 
             LazyColumn {
@@ -112,14 +123,19 @@ fun NotificationSettingsScreen(
                         Text(
                             text = planet,
                             modifier = Modifier.weight(1f),
-                            style = MaterialTheme.typography.bodyLarge
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = Color.White
                         )
                         Switch(
                             checked = isEnabled,
-                            onCheckedChange = { onTogglePlanet(planet) }
+                            onCheckedChange = { onTogglePlanet(planet) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = MaterialTheme.colorScheme.primary
+                            )
                         )
                     }
-                    Divider(modifier = Modifier.padding(horizontal = 16.dp))
+                    Divider(modifier = Modifier.padding(horizontal = 16.dp), color = Color.White.copy(alpha = 0.1f))
                 }
             }
         }
