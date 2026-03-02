@@ -4,11 +4,11 @@ import xyz.frankity.dtracker.models.DestinyEvent
 import java.util.Date
 import kotlin.math.floor
 
-// --- TIME LOGIC (ADJUSTED TO GMT -5) ---
-fun calculateServerTime(): Long {
+// --- TIME LOGIC (ADJUSTED TO CUSTOM OFFSET) ---
+fun calculateServerTime(offset: Int = -7): Long {
     val d = Date()
     val utc = d.time + (d.timezoneOffset * 60 * 1000L)
-    return utc + (1000L * 60 * 60 * -5) // UTC -5 (Colombia)
+    return utc + (1000L * 60 * 60 * offset)
 }
 
 fun calculateNextOccurrence(event: DestinyEvent, serverTime: Long): Long {

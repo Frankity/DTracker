@@ -1,5 +1,6 @@
 package xyz.frankity.dtracker.ui.composables
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -28,10 +30,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import xyz.frankity.dtracker.R
 import xyz.frankity.dtracker.models.DestinyEvent
 import xyz.frankity.dtracker.ui.theme.MontserratFontFamily
 import xyz.frankity.dtracker.ui.theme.getPlanetColor
@@ -49,86 +56,114 @@ fun EventItem(event: DestinyEvent, serverTime: Long, onHit: () -> Unit, onMiss: 
     val planetColor = getPlanetColor(event.planet)
     var showDialog by remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
+    val imageRes = when (event.planet.lowercase()) {
+        "earth" -> R.drawable.earth
+        "moon" -> R.drawable.moon
+        "venus" -> R.drawable.venus
+        "mars" -> R.drawable.mars
+        "tower" -> R.drawable.tower
+        else -> null
+    }
+
     if (showDialog) {
         EventDetailDialog(
             event = event,
             nextOccurrence = nextMillis,
-            onDismiss = { showDialog = false }
+            onDismiss = { showDialog = false },
+            onHit = onHit,
+            onMiss = onMiss
         )
     }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .height(110.dp)
             .padding(horizontal = 8.dp, vertical = 4.dp)
             .clickable { showDialog = true },
-        elevation = CardDefaults.cardElevation(2.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, planetColor.copy(alpha = 0.5f)),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+        elevation = CardDefaults.cardElevation(4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Black)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier
-                    .size(12.dp)
-                    .background(
-                        planetColor,
-                        shape = androidx.compose.foundation.shape.CircleShape
-                    ))
-
-                Spacer(Modifier.width(8.dp))
-
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        text = event.planet.uppercase(),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = planetColor,
-                        fontWeight = FontWeight.ExtraBold,
-                        fontFamily = MontserratFontFamily
-                    )
-                    Text(
-                        text = event.location,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontFamily = MontserratFontFamily,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                Text(
-                    text = remainingTimeText,
-                    fontFamily = MontserratFontFamily,
-                    style = if (diff < 3600000) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Black,
-                    color = if (diff < 300000) Color.Red else planetColor
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Background Image
+            if (imageRes != null) {
+                Image(
+                    painter = painterResource(id = imageRes),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    alpha = 0.6f
                 )
             }
-            Text(
-                text = event.name,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+
+            // Dark Gradient Overlay for readability
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Black.copy(alpha = 0.4f),
+                                Color.Black.copy(alpha = 0.7f)
+                            )
+                        )
+                    )
             )
 
-            Spacer(Modifier.height(8.dp))
+            // Content
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = event.planet.uppercase(),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = planetColor,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontFamily = MontserratFontFamily
+                        )
+                        Text(
+                            text = event.location,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontFamily = MontserratFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Text(
+                            text = event.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontFamily = MontserratFontFamily,
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
+                    }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(
-                    onClick = { onHit() },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF388E3C)),
-                    enabled = event.planet != "Tower"
-                ) {
-                    Text("HIT (${event.successCount})", fontSize = 10.sp, color = Color.White)
-                }
-                OutlinedButton(
-                    onClick = { onMiss() },
-                    modifier = Modifier.weight(1f),
-                    enabled = event.planet != "Tower"
-                ) {
-                    Text("MISS (${event.missCount})", fontSize = 10.sp)
+                    Text(
+                        text = remainingTimeText,
+                        fontFamily = MontserratFontFamily,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Black,
+                        color = if (diff < 300000) Color.Red else Color.White
+                    )
                 }
             }
+            
+            // Planet Indicator Strip
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .height(110.dp)
+                    .align(Alignment.CenterStart)
+                    .background(planetColor)
+            )
         }
     }
 }
@@ -137,7 +172,9 @@ fun EventItem(event: DestinyEvent, serverTime: Long, onHit: () -> Unit, onMiss: 
 fun EventDetailDialog(
     event: DestinyEvent,
     nextOccurrence: Long,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onHit: () -> Unit,
+    onMiss: () -> Unit
 ) {
     val sdf = SimpleDateFormat("EEEE, HH:mm", Locale.getDefault())
     val nextDate = Date(nextOccurrence)
@@ -168,20 +205,30 @@ fun EventDetailDialog(
                 DetailRow("Cycle Delay", "${event.delayMinutes} minutes")
                 DetailRow("Accuracy", "Hits: ${event.successCount} | Misses: ${event.missCount}")
                 
-                if (event.planet == "Tower") {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Tower events are usually inventory refreshes and follow strict schedules.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                } else {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Public events can have a small delay or window. Use HIT/MISS to help track accuracy.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = { 
+                            onHit()
+                            onDismiss()
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF388E3C)),
+                        enabled = event.planet != "Tower"
+                    ) {
+                        Text("HIT", color = Color.White)
+                    }
+                    OutlinedButton(
+                        onClick = { 
+                            onMiss()
+                            onDismiss()
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = event.planet != "Tower"
+                    ) {
+                        Text("MISS")
+                    }
                 }
             }
         },

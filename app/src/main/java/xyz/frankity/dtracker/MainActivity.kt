@@ -22,6 +22,7 @@ import xyz.frankity.dtracker.ui.screens.MainScreen
 import xyz.frankity.dtracker.ui.screens.NotificationSettingsScreen
 import xyz.frankity.dtracker.ui.theme.DTrackerTheme
 import xyz.frankity.dtracker.utils.NotificationHelper
+import xyz.frankity.dtracker.utils.calculateNextOccurrenceProxy
 import xyz.frankity.dtracker.utils.calculateServerTime
 
 class MainActivity : ComponentActivity() {
@@ -50,14 +51,15 @@ class MainActivity : ComponentActivity() {
         setContent {
             DTrackerTheme {
                 var events by remember { mutableStateOf(eventRepository.loadEvents()) }
-                var serverTime by remember { mutableStateOf(calculateServerTime()) }
+                var timeZoneOffset by remember { mutableStateOf(eventRepository.getTimeZoneOffset()) }
+                var serverTime by remember { mutableStateOf(calculateServerTime(timeZoneOffset)) }
                 var currentScreen by remember { mutableStateOf("main") }
                 var enabledPlanets by remember { mutableStateOf(eventRepository.getEnabledPlanets()) }
 
-                // Update timer (every second for countdown)
-                LaunchedEffect(Unit) {
+                // Update timer
+                LaunchedEffect(timeZoneOffset) {
                     while (true) {
-                        serverTime = calculateServerTime()
+                        serverTime = calculateServerTime(timeZoneOffset)
                         delay(1000)
                     }
                 }
@@ -66,23 +68,33 @@ class MainActivity : ComponentActivity() {
                     MainScreen(
                         events = events,
                         serverTime = serverTime,
+                        timeZoneOffset = timeZoneOffset,
                         initialEventId = initialEventIdFromNotification,
                         onUpdateEvent = { id, isHit ->
-                            val newList = events.map {
-                                if (it.id == id) {
-                                    if (isHit) it.copy(successCount = it.successCount + 1)
-                                    else it.copy(missCount = it.missCount + 1)
-                                } else it
+                            val currentTime = calculateServerTime(timeZoneOffset)
+                            val newList = events.map { event ->
+                                if (event.id == id) {
+                                    if (isHit) {
+                                        val nextOccurrence = calculateNextOccurrenceProxy(event, currentTime)
+                                        val delayMillis = event.delayMinutes * 60 * 1000L
+                                        val timeSinceScheduledStart = (currentTime - (nextOccurrence - delayMillis)) / (60 * 1000L)
+                                        val newMax = if (timeSinceScheduledStart > event.maxWindow) timeSinceScheduledStart.toInt() else event.maxWindow
+                                        val newStart = if (currentTime < nextOccurrence && (nextOccurrence - currentTime) < (15 * 60 * 1000L)) currentTime else event.initialStartMillis
+
+                                        event.copy(successCount = event.successCount + 1, maxWindow = newMax, initialStartMillis = newStart)
+                                    } else {
+                                        event.copy(missCount = event.missCount + 1)
+                                    }
+                                } else event
                             }
                             events = newList
                             eventRepository.saveEvents(newList)
                         },
                         onNavigateToSettings = { currentScreen = "settings" }
                     )
-                    // Reset initialEventId after passing it to MainScreen
                     LaunchedEffect(initialEventIdFromNotification) {
                         if (initialEventIdFromNotification != null) {
-                            delay(500) // Small delay to ensure dialog is triggered
+                            delay(500) 
                             initialEventIdFromNotification = null
                         }
                     }
@@ -93,14 +105,17 @@ class MainActivity : ComponentActivity() {
                     NotificationSettingsScreen(
                         planets = allPlanets,
                         enabledPlanets = enabledPlanets,
+                        timeZoneOffset = timeZoneOffset,
                         onTogglePlanet = { planet ->
-                            val newEnabled = if (enabledPlanets.contains(planet)) {
-                                enabledPlanets - planet
-                            } else {
-                                enabledPlanets + planet
-                            }
+                            val newEnabled = if (enabledPlanets.contains(planet)) enabledPlanets - planet else enabledPlanets + planet
                             enabledPlanets = newEnabled
                             eventRepository.setEnabledPlanets(newEnabled)
+                            NotificationHelper.scheduleNextNotification(this@MainActivity)
+                        },
+                        onTimeZoneChange = { newOffset ->
+                            timeZoneOffset = newOffset
+                            eventRepository.setTimeZoneOffset(newOffset)
+                            events = eventRepository.loadEvents() // Reload to force recalculation with today
                             NotificationHelper.scheduleNextNotification(this@MainActivity)
                         },
                         onBack = { currentScreen = "main" }
@@ -124,11 +139,7 @@ class MainActivity : ComponentActivity() {
 
     private fun checkNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.POST_NOTIFICATIONS
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }

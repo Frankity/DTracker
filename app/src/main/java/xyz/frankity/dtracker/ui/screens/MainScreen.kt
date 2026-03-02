@@ -1,6 +1,8 @@
 package xyz.frankity.dtracker.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,8 +32,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import xyz.frankity.dtracker.R
 import xyz.frankity.dtracker.models.DestinyEvent
 import xyz.frankity.dtracker.ui.composables.EventDetailDialog
 import xyz.frankity.dtracker.ui.composables.EventItem
@@ -38,13 +45,17 @@ import xyz.frankity.dtracker.ui.theme.MontserratFontFamily
 import xyz.frankity.dtracker.ui.theme.getPlanetColor
 import xyz.frankity.dtracker.utils.calculateNextOccurrence
 import xyz.frankity.dtracker.utils.calculateNextOccurrenceProxy
+import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     events: List<DestinyEvent>,
     serverTime: Long,
+    timeZoneOffset: Int,
     initialEventId: String? = null,
     onUpdateEvent: (String, Boolean) -> Unit,
     onNavigateToSettings: () -> Unit
@@ -61,94 +72,123 @@ fun MainScreen(
         EventDetailDialog(
             event = eventToShowDetails!!,
             nextOccurrence = calculateNextOccurrenceProxy(eventToShowDetails!!, serverTime),
-            onDismiss = { eventToShowDetails = null }
+            onDismiss = { eventToShowDetails = null },
+            onHit = { onUpdateEvent(eventToShowDetails!!.id, true) },
+            onMiss = { onUpdateEvent(eventToShowDetails!!.id, false) }
         )
     }
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "D1 Public Events Tracker",
-                        fontFamily = MontserratFontFamily,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                actions = {
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
-                    }
-                }
-            )
-        }
-    ) { innerPadding ->
-        var selectedPlanet by remember { mutableStateOf<String?>(null) }
+    Box(modifier = Modifier.fillMaxSize()) {
+        Image(
+            painter = painterResource(id = R.drawable.destiny_bg),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
 
-        val planets = remember(events) {
-            listOf("All") + events.map { it.planet }.distinct().sortedBy { it }
-        }
-
-        Column(modifier = Modifier.padding(innerPadding)) {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shadowElevation = 4.dp,
-                color = MaterialTheme.colorScheme.surface
-            ) {
-                LazyRow(
-                    modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(planets) { planet ->
-                        val planetColor = getPlanetColor(planet)
-                        FilterChip(
-                            selected = (selectedPlanet == planet) || (planet == "All" && selectedPlanet == null),
-                            onClick = { selectedPlanet = if (planet == "All") null else planet },
-                            label = { Text(planet.uppercase()) },
-                            leadingIcon = if ((selectedPlanet == planet) || (planet == "All" && selectedPlanet == null)) {
-                                { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp)) }
-                            } else null,
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = planetColor.copy(alpha = 0.2f),
-                                selectedLabelColor = planetColor,
-                                selectedLeadingIconColor = planetColor
-                            ),
-                            border = FilterChipDefaults.filterChipBorder(
-                                enabled = true,
-                                selected = (selectedPlanet == planet) || (planet == "All" && selectedPlanet == null),
-                                selectedBorderColor = planetColor,
-                                selectedBorderWidth = 2.dp
-                            )
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            "D1 Public Events Tracker",
+                            fontFamily = MontserratFontFamily,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
                         )
-                    }
-                }
-            }
-
-            // Server Info
-            Surface(color = MaterialTheme.colorScheme.secondaryContainer) {
-                Text(
-                    text = "Server (UTC-5): ${Date(serverTime)}",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                    },
+                    actions = {
+                        IconButton(onClick = onNavigateToSettings) {
+                            Icon(
+                                Icons.Default.Settings,
+                                contentDescription = "Settings",
+                                tint = Color.White
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = Color.Black.copy(alpha = 0.5f)
+                    )
                 )
             }
+        ) { innerPadding ->
+            var selectedPlanet by remember { mutableStateOf<String?>(null) }
 
-            val filteredEvents = remember(events, selectedPlanet, serverTime) {
-                events.filter { selectedPlanet == null || it.planet == selectedPlanet }
-                    .sortedBy { calculateNextOccurrence(it, serverTime) }
+            val planets = remember(events) {
+                listOf("All") + events.map { it.planet }.distinct().sortedBy { it }
             }
 
-            LazyColumn(modifier = Modifier.fillMaxSize()) {
-                items(filteredEvents, key = { it.id }) { event ->
-                    EventItem(
-                        event = event,
-                        serverTime = serverTime,
-                        onHit = { onUpdateEvent(event.id, true) },
-                        onMiss = { onUpdateEvent(event.id, false) }
+            Column(modifier = Modifier.padding(innerPadding)) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shadowElevation = 4.dp,
+                    color = Color.Black.copy(alpha = 0.3f)
+                ) {
+                    LazyRow(
+                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(planets) { planet ->
+                            val planetColor = getPlanetColor(planet)
+                            FilterChip(
+                                selected = (selectedPlanet == planet) || (planet == "All" && selectedPlanet == null),
+                                onClick = { selectedPlanet = if (planet == "All") null else planet },
+                                label = { Text(planet.uppercase(), color = if ((selectedPlanet == planet) || (planet == "All" && selectedPlanet == null)) Color.White else Color.White.copy(alpha = 0.7f)) },
+                                leadingIcon = if ((selectedPlanet == planet) || (planet == "All" && selectedPlanet == null)) {
+                                    { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White) }
+                                } else null,
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = planetColor.copy(alpha = 0.4f),
+                                    selectedLabelColor = Color.White,
+                                    selectedLeadingIconColor = Color.White,
+                                    containerColor = Color.White.copy(alpha = 0.1f),
+                                    labelColor = Color.White.copy(alpha = 0.7f)
+                                ),
+                                border = FilterChipDefaults.filterChipBorder(
+                                    enabled = true,
+                                    selected = (selectedPlanet == planet) || (planet == "All" && selectedPlanet == null),
+                                    selectedBorderColor = planetColor,
+                                    selectedBorderWidth = 2.dp,
+                                    borderColor = Color.White.copy(alpha = 0.3f)
+                                )
+                            )
+                        }
+                    }
+                }
+
+                // Server Info
+                Surface(color = Color.Black.copy(alpha = 0.5f)) {
+                    val sdf = SimpleDateFormat("EEE, HH:mm:ss", Locale.getDefault()).apply {
+                        val zoneId = if (timeZoneOffset >= 0) "GMT+$timeZoneOffset" else "GMT$timeZoneOffset"
+                        timeZone = TimeZone.getTimeZone(zoneId)
+                    }
+                    val offsetText = if (timeZoneOffset >= 0) "+$timeZoneOffset" else "$timeZoneOffset"
+                    
+                    Text(
+                        text = "Server (UTC$offsetText): ${sdf.format(Date(serverTime))}",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White.copy(alpha = 0.9f)
                     )
+                }
+
+                val filteredEvents = remember(events, selectedPlanet, serverTime) {
+                    events.filter { selectedPlanet == null || it.planet == selectedPlanet }
+                        .sortedBy { calculateNextOccurrence(it, serverTime) }
+                }
+
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(filteredEvents, key = { it.id }) { event ->
+                        EventItem(
+                            event = event,
+                            serverTime = serverTime,
+                            onHit = { onUpdateEvent(event.id, true) },
+                            onMiss = { onUpdateEvent(event.id, false) }
+                        )
+                    }
                 }
             }
         }
